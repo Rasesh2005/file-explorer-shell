@@ -150,6 +150,14 @@ void commandMode()
     else if(command == "q"){
         displayFiles();
     }
+    else {
+        showTempMessage(
+            "Invalid command. Type :help to see available commands",
+            1200
+        );
+        displayFiles();
+    }
+
     return;
 }
 
@@ -159,6 +167,10 @@ void displayFiles() {
     setCursorRed();
 
     openCurrDirectory(currPath);
+    if(fileList.empty()) {
+        // Do nothing, directory is empty
+        return;
+    }
     // logMessage(currPath);
     for (unsigned int i = up_screen, line=1; i < up_screen + rowSize && i < fileList.size(); i++, line++) {
         posx(line, colSize+2);
@@ -171,8 +183,8 @@ void displayFiles() {
     char *newPath = new char[tempPath.length() + 1]; 
     strcpy(newPath, tempPath.c_str());
 
-    posx(1,1);
-    getFileDetails(newPath);
+    // posx(1,1);
+    // getFileDetails(newPath);
 
     if(!isDirectory(newPath)){
         // posx(1, 45);
@@ -208,6 +220,10 @@ void displayFiles() {
     posx(rows-2, 0);
     printf("\033[1;34mCurrent Path: %s\033[0m\n", currPath);
     openCurrDirectory(currPath);
+
+    posx(1,1);
+    getFileDetails(newPath);
+
     ycurr=colSize;
     pos();
     // logMessage(to_string(ycurr));
@@ -272,6 +288,7 @@ void navigate() {
 
             if (ch == 'A') {  // Up arrow key
                 // printf("Up arrow key used\n");
+                stopFolderScan();
                 if(xcurr>1){
                     xcurr--;
                     displayFiles();
@@ -283,12 +300,13 @@ void navigate() {
                     displayFiles();
                 }
                 else{
-                    displayFiles();
+                    // displayFiles();
                 }
             }
 
             else if(ch=='B'){
                 // printf("Down arrow key used\n");
+                stopFolderScan();
                 openCurrDirectory(currPath);
                 if(xcurr<rowSize && xcurr<fileList.size()){
                     xcurr++;
@@ -311,6 +329,7 @@ void navigate() {
 
             else if(ch=='C'){
                 // printf("Right arrow used\n");
+                stopFolderScan();
                 selectedFiles.clear();
                 string selectedFile = fileList[xcurr + up_screen - 1];
                 string tempPath = string(currPath);
@@ -350,6 +369,7 @@ void navigate() {
 
             else if(ch == 'D'){
                 // printf("Left arrow key used\n");
+                stopFolderScan();
                 selectedFiles.clear();
                 if(!backStack.empty()){
                     NavState prevState = backStack.top();
@@ -373,7 +393,7 @@ void navigate() {
                     pos();
                 }
                 else{
-                    displayFiles();
+                    // displayFiles();
                 }
             }
 
@@ -500,11 +520,6 @@ void handleSigint(int signum) {
     fputs("\033[2J", stdout) ;
     fprintf(stdout, "\033[%d;%dH", 0, 0);
 
-    // Reset the cursor color before exiting.
-    // resetCursorColor();
-    
-    // Exit with the signal number.
-    // cout << "Exited gracefully." << endl;
     exit(signum);
 }
 
