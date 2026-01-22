@@ -1,4 +1,4 @@
 performance:
   workers: 5
   indexing: true
-  indexing_root: /home
+  indexing_root: /Users/rasesh/

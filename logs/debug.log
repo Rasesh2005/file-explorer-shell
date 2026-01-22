@@ -1,34 +1,6 @@
 Loaded workers = 5
-Indexing ENABLED
+Indexing DISABLED
 Indexing root set to: /home
-Process ID: 170349
-/home
-home
-Starting offline indexing...
-/home/varalika
-varalika
-/home/varalika/Desktop
-Desktop
-/home/varalika/Desktop/Varalika
-Varalika
-/home/varalika/Desktop/Varalika/file-explorer-shell
-file-explorer-shell
-Traversal complete. Total paths queued: 5041
-Indexing finished.
-Indexing took: 29 seconds
-Loaded workers = 5
-Indexing ENABLED
-Indexing root set to: /home
-Process ID: 170643
-/home
-home
-Starting offline indexing...
-/home/varalika
-varalika
-/home/varalika/Desktop
-Desktop
-/home/varalika/Desktop/Varalika
-Varalika
-/home/varalika/Desktop/Varalika/file-explorer-shell
-file-explorer-shell
-Traversal complete. Total paths queued: 5046
+Process ID: 233885
+Indexing skipped (disabled in config)
+Search took: 35 ms

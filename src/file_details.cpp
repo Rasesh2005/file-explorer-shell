@@ -1,10 +1,11 @@
 #include "myheader.h"
 
-#define pos() fprintf(stdout, "\033[%d;%dH", xcurr, ycurr)  // Move cursor
-#define posx(x, y) fprintf(stdout, "\033[%d;%dH", x, y)  // Move to (x, y)
+#define pos() cout << "\033[" << xcurr << ";" << ycurr << "H" << flush
+#define posx(x, y) cout << "\033[" << x << ";" << y << "H" << flush
 
 atomic<bool> sizeCancelFlag{false};
 atomic<bool> sizeInProgress{false};
+atomic<bool> uiRefresh{false};
 atomic<off_t> lastComputedSize{0};
 atomic<long long> lastScanDuration{-1};
 
@@ -29,14 +30,16 @@ void print_details() {
 
     posx(1,1);
 
+    std::string s = "";
+
     cout << truncate("File Name: " + left_fileName, left_colSize - 4) << endl;
 
-    if (sizeInProgress)
-        cout << truncate("File Size: Calculating", left_colSize - 4) << endl;
+    if (sizeInProgress){
+        s = "File Size: Calculating";
+        cout << truncate(s, left_colSize - 4) << endl;
+    }
     else
-        cout << truncate("File Size: " +
-            humanReadableSize(lastComputedSize),
-            left_colSize - 4) << endl;
+        cout << truncate("File Size: " + humanReadableSize(lastComputedSize), left_colSize - 4) << endl;
 
     cout << truncate("Ownership: " + left_userName + " (User)", left_colSize - 4) << endl;
     cout << truncate(left_groupName + " (Group)", left_colSize - 4) << endl;
@@ -44,11 +47,11 @@ void print_details() {
     cout << truncate("Last Modified: " + string(left_timeBuffer), left_colSize - 4) << endl;
 
     if (lastScanDuration >= 0)
-        cout << truncate("Scan Time: " + to_string(lastScanDuration) + " ms",
-                         left_colSize - 4) << endl;
-    else
-        cout << truncate("", left_colSize - 4) << endl;
-
+        cout << truncate("Scan Time: " + to_string(lastScanDuration) + " ms",left_colSize - 4) << endl;
+    else{
+        s = "Scan Time: Calculating";
+        cout << truncate(s, left_colSize - 4) << endl;
+    }
     pos();
 }
 
@@ -77,6 +80,7 @@ void startFolderSizeWorker(const string &path) {
 
     sizeCancelFlag = false;
     sizeInProgress = true;
+    uiRefresh = false;
     lastScanDuration = -1;
 
     sizeWorker = thread([path]() {
@@ -89,10 +93,12 @@ void startFolderSizeWorker(const string &path) {
             lastScanDuration =
                 chrono::duration_cast<chrono::milliseconds>(end - start).count();
             sizeInProgress = false;
+            uiRefresh = true;
         }
 
-        print_details();
+        // print_details();
     });
+    sizeWorker.detach();
 }
 
 off_t getFolderSizeMT(const string &rootPath, int numThreads) {
