@@ -1,53 +1,5 @@
 #include "myheader.h"
 
-InvertedIndex globalIndex;
-vector<int> freeFileIds;
-
-void runIndexingInBackground(const string root) {
-    indexingInProgress = true;
-
-    if (!isValidDirectory(root)) {
-        indexingInProgress = false;
-        fprintf(stderr,
-            "\033[1;31mError:\033[0m indexing_root '%s' is not a valid directory\n",
-            root.c_str()
-        );
-        exit(EXIT_FAILURE);   // exit code != 0
-    }
-
-    logMessage("Starting offline indexing...");
-
-    traverse(root);
-
-    logMessage("Traversal complete. Total paths queued: " +
-               to_string(indexQueue.size()));
-
-    auto t1 = chrono::high_resolution_clock::now();
-
-    globalIndex.indexAllOnce(indexQueue);
-
-    auto t2 = chrono::high_resolution_clock::now();
-
-    logMessage("Indexing finished.");
-    logMessage("Indexing took: " +
-        to_string(
-            chrono::duration_cast<chrono::seconds>(t2 - t1).count()
-        ) + " seconds");
-
-    indexingInProgress = false;
-}
-
-
-bool isRegularFile(const string &path) {
-    struct stat st;
-    return (stat(path.c_str(), &st) == 0 && S_ISREG(st.st_mode));
-}
-
-bool isDirectoryPath(const string &path) {
-    struct stat st;
-    return (stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode));
-}
-
 int InvertedIndex::getWordId(const string &word)
 {
     auto it = wordToId.find(word);
@@ -68,10 +20,10 @@ void InvertedIndex::indexPath(const string &path)
     auto fit = fileToId.find(path);
     if (fit == fileToId.end()) {
 
-        if (!freeFileIds.empty()) {
+        if (!app.indexing.freeFileIds.empty()) {
             // reuse deleted file id
-            file_id = freeFileIds.back();
-            freeFileIds.pop_back();
+            file_id = app.indexing.freeFileIds.back();
+            app.indexing.freeFileIds.pop_back();
             idToFile[file_id] = path;
         } else {
             // create new file id
@@ -131,7 +83,7 @@ void InvertedIndex::indexAllOnce(queue<string> &paths)
 
 void InvertedIndex::search(const string &query)
 {
-    foundPaths.clear();   // GLOBAL vector<string>
+    app.search.foundPaths.clear();   // GLOBAL vector<string>
 
     // auto t1 = chrono::high_resolution_clock::now();
 
@@ -171,13 +123,10 @@ void InvertedIndex::search(const string &query)
     for (auto &p : fileCounter) {
         if (p.second == required) {
             if (!idToFile[p.first].empty())
-                foundPaths.push_back(idToFile[p.first]);
+                app.search.foundPaths.push_back(idToFile[p.first]);
         }
     }
 
-    // auto t2 = chrono::high_resolution_clock::now();
-    // lastSearchTimeMs =
-    //     chrono::duration_cast<chrono::milliseconds>(t2 - t1).count();
 }
 
 void InvertedIndex::rectifyIndex(
@@ -241,5 +190,5 @@ void InvertedIndex::removePath(const string &path)
     /* 2️⃣ Remove file mappings */
     fileToId.erase(path);
     idToFile[file_id] = "";
-    freeFileIds.push_back(file_id);
+    app.indexing.freeFileIds.push_back(file_id);
 }
