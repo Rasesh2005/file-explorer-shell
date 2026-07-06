@@ -44,7 +44,6 @@
 | **Content Search** | ❌ Relies on `grep` | ✅ **Persistent inverted index (LMDB)** |
 | Real-time Index Updates | ❌ | ✅ **FSEvents (macOS) / inotify (Linux)** |
 | **Search Speed** | ~300-800ms (`grep -R`) | **~5-20ms (indexed)** |
-
 ---
 
 ## 2. Architecture

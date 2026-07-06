@@ -1,22 +1,18 @@
 #include "myheader.hpp"
 
 void startFolderSizeWorker(const std::string &path) {
-  if (app.size_state.worker.joinable()) {
-    app.size_state.cancel_flag = true;
-    app.size_state.worker.join();
-  }
+  uint64_t request_id = ++app.size_state.active_request_id;
 
-  app.size_state.cancel_flag = false;
   app.size_state.in_progress = true;
   app.ui.refresh = false;
   app.file_details.last_scan_duration = -1;
 
-  app.size_state.worker = std::thread([path]() {
+  std::thread([path, request_id]() {
     auto start = std::chrono::steady_clock::now();
-    off_t size = getFolderSizeMT(path, app.config.workers);
+    off_t size = getFolderSizeMT(path, app.config.workers, request_id);
     auto end = std::chrono::steady_clock::now();
 
-    {
+    if (app.size_state.active_request_id == request_id) {
       app.size_state.last_size = size;
       app.file_details.last_scan_duration =
           std::chrono::duration_cast<std::chrono::milliseconds>(end - start)
@@ -24,11 +20,10 @@ void startFolderSizeWorker(const std::string &path) {
       app.size_state.in_progress = false;
       app.ui.refresh = true;
     }
-  });
-  app.size_state.worker.detach();
+  }).detach();
 }
 
-std::uintmax_t getFolderSizeMT(const std::string &root_path, int num_threads) {
+std::uintmax_t getFolderSizeMT(const std::string &root_path, int num_threads, uint64_t request_id) {
   std::queue<fs::path> dir_queue;
   std::mutex mtx;
   std::condition_variable cv;
@@ -63,7 +58,7 @@ std::uintmax_t getFolderSizeMT(const std::string &root_path, int num_threads) {
       try {
         // ---- Traverse directory ----
         for (const auto &entry : fs::directory_iterator(current_dir)) {
-          if (app.size_state.cancel_flag.load()) {
+          if (app.size_state.active_request_id != request_id) {
             std::lock_guard<std::mutex> lock(mtx);
             done = true;
             cv.notify_all();

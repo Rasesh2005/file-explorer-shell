@@ -1,5 +1,4 @@
-#ifndef ANSI_CODES_HPP
-#define ANSI_CODES_HPP
+#pragma once
 
 #include <string>
 
@@ -7,9 +6,8 @@ namespace ANSI {
 
     // --- Reset ---
     const std::string RESET = "\033[0m"; // Reset all terminal attributes (color, style, etc.) to default.
-
     // --- Text Styles ---
-    const std::string BOLD = "\033[1m"; // Enable bold text.
+    const std::string BOLD = "\033[1m"; // Enable bold text. 
     const std::string INVERSE = "\033[7m"; // Swap foreground and background colors.
 
     // --- Bold Colors ---
@@ -44,4 +42,4 @@ namespace ANSI {
 
 } // namespace ANSI
 
-#endif // ANSI_CODES_H
+

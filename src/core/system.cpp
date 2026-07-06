@@ -13,17 +13,11 @@ void handleResizeIfNeeded() {
 }
 
 void cleanup() {
-    app.size_state.cancel_flag = true;
-
-    if (app.size_state.worker.joinable())
-        app.size_state.worker.join();
+    app.size_state.active_request_id++;
 }
 
 void stopFolderScan() {
-    app.size_state.cancel_flag = true;
-
-    if (app.size_state.worker.joinable())
-        app.size_state.worker.join();
+    app.size_state.active_request_id++;
     app.size_state.in_progress = false;
     setDefaultCursorPos();
 }

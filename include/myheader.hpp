@@ -1,5 +1,4 @@
-#ifndef MYHEADER_HPP
-#define MYHEADER_HPP
+#pragma once
 
 #include "ansi_codes.hpp"
 #include <algorithm>
@@ -109,7 +108,6 @@ public:
 struct NavigatorState {
   std::string root;
   std::string curr_path;
-  std::string prev_path;
 
   std::vector<std::string> file_list;
 
@@ -120,7 +118,6 @@ struct NavigatorState {
   int down_screen = 0;
 
   std::stack<NavState> back_stack;
-  std::stack<NavState> forward_stack;
 };
 
 struct SearchState {
@@ -154,7 +151,6 @@ FileSystemWatcher *createWatcher();
 
 struct IndexingState {
   std::queue<WatcherEvent> event_queue; // Queue for real-time events
-  std::queue<std::string> index_queue;  // Queue for startup crawl
   InvertedIndex index;
 
   std::atomic<bool> indexing_in_progress{false};
@@ -168,11 +164,9 @@ struct IndexingState {
 };
 
 struct SizeComputationState {
-  std::atomic<bool> cancel_flag{false};
+  std::atomic<uint64_t> active_request_id{0};
   std::atomic<bool> in_progress{false};
   std::atomic<off_t> last_size{0};
-
-  std::thread worker;
 
   std::mutex mtx;
   std::condition_variable cv;
@@ -202,11 +196,6 @@ struct LayoutState {
   int row_size = 0;
   int total_files = 0;
   int col_size = 0;
-
-  int prev_up_screen = 0;
-  int prev_down_screen = 0;
-  int for_up_screen = 0;
-  int for_down_screen = 0;
 };
 
 struct FileDetailsState {
@@ -302,7 +291,7 @@ void logMessage(const std::string &message);
 std::string getInput();
 void getTerminalSize();
 void getFileDetails(const std::string &path);
-std::uintmax_t getFolderSizeMT(const std::string &root_path, int num_threads);
+std::uintmax_t getFolderSizeMT(const std::string &root_path, int num_threads, uint64_t request_id);
 std::uintmax_t getFolderSize(const std::string &path);
 std::string humanReadableSize(off_t size);
 std::string normalizeWord(const std::string &input);
@@ -332,4 +321,3 @@ fs::path getSelectedPath() noexcept;
 void refreshCurrentDirectory();
 void openFile(const std::string &path) noexcept;
 void handleEnterAction();
-#endif // MYHEADER_HPP
